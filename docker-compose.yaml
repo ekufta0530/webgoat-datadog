@@ -1,0 +1,32 @@
+version: '3'
+services:
+  datadog-agent:
+    image: datadog/agent:latest
+    container_name: datadog-agent
+    env_file:
+      - ~/sandbox.docker.env
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - /proc/:/host/proc/:ro
+      - /sys/fs/cgroup/:/host/sys/fs/cgroup:ro
+    ports:
+      - 127.0.0.1:8126:8126/tcp
+    environment:
+      - DD_APM_ENABLED=true
+      - DD_APM_NON_LOCAL_TRAFFIC=true
+      - DD_LOG_LEVEL=TRACE
+      - DD_DOGSTATSD_NON_LOCAL_TRAFFIC=true
+      - DD_AC_EXCLUDE=name:datadog-agent
+      - DD_LOGS_ENABLED=true
+      - DD_LOGS_CONFIG_CONTAINER_COLLECT_ALL=true
+  webgoat:
+    image: webgoat-dd-asm-webgoat
+    container_name: webgoat
+    ports:
+      - "9090:9090"
+      - "8080:8080"
+    environment:
+      - DD_AGENT_HOST=datadog-agent
+      - TZ=America/Denver
+    depends_on:
+      - datadog-agent
